@@ -4,6 +4,7 @@ import * as cdk from '@aws-cdk/core';
 
 import { LambdaStack } from '../lib/lambda-stack';
 import { IotAnalyticsStack } from '../lib/iot-analytics-stack';
+import { IotCoreStack } from '../lib/iot-core-stack';
 
 export type Environment = {
   projectName: string;
@@ -19,8 +20,12 @@ const env: Environment = {
 };
 
 const lambda = new LambdaStack(app, 'LambdaStack', env);
-
-new IotAnalyticsStack(app, 'IotAnalyticsStack', {
+const iotAnalytics = new IotAnalyticsStack(app, 'IotAnalyticsStack', {
   ...env,
   pipelineLambdaActivityFunctionName: lambda.function.functionName,
 });
+const iotCoreStack = new IotCoreStack(app, 'IotCoreStack', {
+  ...env,
+  iotAnalyticsChannelName: iotAnalytics.channel.channelName as string,
+});
+iotCoreStack.addDependency(iotAnalytics);

@@ -1,104 +1,54 @@
 import * as cdk from '@aws-cdk/core';
-import * as iot from '@aws-cdk/aws-iot';
 import * as iotAnalytics from '@aws-cdk/aws-iotanalytics';
-import * as iam from '@aws-cdk/aws-iam';
 
 interface IotAnalyticsStackProps extends cdk.StackProps {
   projectName: string;
-  ioTCertificateName: string;
   pipelineLambdaActivityFunctionName: string;
 }
 
 export class IotAnalyticsStack extends cdk.Stack {
+  public readonly channel: iotAnalytics.CfnChannel;
+
   constructor(scope: cdk.Construct, id: string, props: IotAnalyticsStackProps) {
     super(scope, id, props);
 
-    const { accountId, region } = new cdk.ScopedAws(this);
-    const {
-      projectName,
-      ioTCertificateName,
-      pipelineLambdaActivityFunctionName,
-    } = props;
-    const ioTCertificateArn = `arn:aws:iot:${region}:${accountId}:cert/${ioTCertificateName}`;
+    const { projectName, pipelineLambdaActivityFunctionName } = props;
 
-    /* AWS IoT Core */
-
-    const iotPolicy = new iot.CfnPolicy(this, `${projectName}_iot_policy`, {
-      policyDocument: {
-        Version: '2012-10-17',
-        Statement: [
-          {
-            Effect: 'Allow',
-            Action: 'iot:*',
-            Resource: '*',
-          },
-        ],
-      },
-      policyName: `${projectName}_iot_policy`,
-    });
-    const iotPolicyName = iotPolicy.policyName as string;
-
-    const iotThing = new iot.CfnThing(this, `${projectName}_iot_thing`, {
-      thingName: `${projectName}_iot_thing`,
-    });
-    const iotThingName = iotThing.thingName as string;
-
-    const iotPolicyPrincipalAttachment = new iot.CfnPolicyPrincipalAttachment(
-      this,
-      `${projectName}_iot_policy_principal_attachment`,
-      {
-        policyName: iotPolicyName,
-        principal: ioTCertificateArn,
-      }
-    );
-    iotPolicyPrincipalAttachment.addDependsOn(iotPolicy);
-
-    const iotThingPrincipalAttachment = new iot.CfnThingPrincipalAttachment(
-      this,
-      `${projectName}_iot_thing_principal_attachment`,
-      {
-        thingName: iotThingName,
-        principal: ioTCertificateArn,
-      }
-    );
-    iotThingPrincipalAttachment.addDependsOn(iotThing);
-
-    /* AWS IoT Analytics */
-
+    const channelName = `${projectName}_iot_analytics_channel`;
     const iotAnalyticsChannel = new iotAnalytics.CfnChannel(
       this,
-      `${projectName}_iot_analytics_channel`,
+      'IotAnalyticsChannel',
       {
-        channelName: `${projectName}_iot_analytics_channel`,
+        channelName,
         channelStorage: {
           serviceManagedS3: {},
         },
       }
     );
-    const iotAnalyticsChannelName = iotAnalyticsChannel.channelName as string;
+    this.channel = iotAnalyticsChannel;
 
+    const datastoreName = `${projectName}_iot_analytics_datastore`;
     const iotAnalyticsDatastore = new iotAnalytics.CfnDatastore(
       this,
-      `${projectName}_iot_analytics_datastore`,
+      'IotAnalyticsDatastore',
       {
-        datastoreName: `${projectName}_iot_analytics_datastore`,
+        datastoreName,
         datastoreStorage: {
           serviceManagedS3: {},
         },
       }
     );
-    const iotAnalyticsDatastoreName = iotAnalyticsDatastore.datastoreName as string;
 
     const iotAnalyticsPipeline = new iotAnalytics.CfnPipeline(
       this,
-      `${projectName}_iot_analytics_pipeline`,
+      'IotAnalyticsPipeline',
       {
         pipelineName: `${projectName}_iot_analytics_pipeline`,
         pipelineActivities: [
           {
             channel: {
               name: 'pipeline_channel_activity',
-              channelName: iotAnalyticsChannelName,
+              channelName,
               next: 'pipeline_add_attributes_activity',
             },
             addAttributes: {
@@ -133,7 +83,7 @@ export class IotAnalyticsStack extends cdk.Stack {
             },
             datastore: {
               name: 'pipeline_datastore_activity',
-              datastoreName: iotAnalyticsDatastoreName,
+              datastoreName,
             },
           },
         ],
@@ -142,14 +92,14 @@ export class IotAnalyticsStack extends cdk.Stack {
 
     const iotAnalyticsDataset = new iotAnalytics.CfnDataset(
       this,
-      `${projectName}_iot_analytics_dataset`,
+      'IotAnalyticsDataset',
       {
         datasetName: `${projectName}_iot_analytics_dataset`,
         actions: [
           {
             actionName: 'SqlAction',
             queryAction: {
-              sqlQuery: `SELECT * FROM ${iotAnalyticsDatastoreName} WHERE __dt > current_date - interval '1' day`,
+              sqlQuery: `SELECT * FROM ${datastoreName} WHERE __dt > current_date - interval '1' day`,
             },
           },
         ],
@@ -167,43 +117,5 @@ export class IotAnalyticsStack extends cdk.Stack {
       }
     );
     iotAnalyticsDataset.addDependsOn(iotAnalyticsDatastore);
-
-    const iotBatchPutMessageRole = new iam.Role(
-      this,
-      `${projectName}_iot_batch_put_message_role`,
-      {
-        assumedBy: new iam.ServicePrincipal('iot.amazonaws.com'),
-        path: '/',
-      }
-    );
-    iotBatchPutMessageRole.addToPolicy(
-      new iam.PolicyStatement({
-        actions: ['iotanalytics:BatchPutMessage'],
-        resources: [
-          `arn:aws:iotanalytics:${region}:${accountId}:channel/${iotAnalyticsChannel.channelName}`,
-        ],
-      })
-    );
-
-    const IoTTopicRule = new iot.CfnTopicRule(
-      this,
-      `${projectName}_iot_topic_rule`,
-      {
-        ruleName: `${projectName}_iot_topic_rule`,
-        topicRulePayload: {
-          actions: [
-            {
-              iotAnalytics: {
-                channelName: iotAnalyticsChannelName,
-                roleArn: iotBatchPutMessageRole.roleArn,
-              },
-            },
-          ],
-          awsIotSqlVersion: '2016-03-23',
-          ruleDisabled: false,
-          sql: "SELECT * FROM 'iot/topic'",
-        },
-      }
-    );
   }
 }
