@@ -213,39 +213,21 @@ def lambda_handler(event, context):
     );
     iotAnalyticsDataset.addDependsOn(iotAnalyticsDatastore);
 
-    const iotBatchPutMessageRole = new iam.CfnRole(
+    const iotBatchPutMessageRole = new iam.Role(
       this,
       `${projectName}_iot_batch_put_message_role`,
       {
-        assumeRolePolicyDocument: {
-          Version: '2012-10-17',
-          Statement: [
-            {
-              Effect: 'Allow',
-              Principal: {
-                Service: 'iot.amazonaws.com',
-              },
-              Action: 'sts:AssumeRole',
-            },
-          ],
-        },
+        assumedBy: new iam.ServicePrincipal('iot.amazonaws.com'),
         path: '/',
-        policies: [
-          {
-            policyName: `${projectName}_iot_batch_put_message_role`,
-            policyDocument: {
-              Version: '2012-10-17',
-              Statement: [
-                {
-                  Effect: 'Allow',
-                  Action: 'iotanalytics:BatchPutMessage',
-                  Resource: `arn:aws:iotanalytics:${region}:${accountId}:channel/${iotAnalyticsChannel.channelName}`,
-                },
-              ],
-            },
-          },
-        ],
       }
+    );
+    iotBatchPutMessageRole.addToPolicy(
+      new iam.PolicyStatement({
+        actions: ['iotanalytics:BatchPutMessage'],
+        resources: [
+          `arn:aws:iotanalytics:${region}:${accountId}:channel/${iotAnalyticsChannel.channelName}`,
+        ],
+      })
     );
 
     const IoTTopicRule = new iot.CfnTopicRule(
@@ -258,7 +240,7 @@ def lambda_handler(event, context):
             {
               iotAnalytics: {
                 channelName: `${projectName}_iot_analytics_channel`,
-                roleArn: iotBatchPutMessageRole.attrArn,
+                roleArn: iotBatchPutMessageRole.roleArn,
               },
             },
           ],
