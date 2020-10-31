@@ -4,7 +4,7 @@ import {
   MatchStyle,
 } from '@aws-cdk/assert';
 import * as cdk from '@aws-cdk/core';
-import * as AwsIotAnalyticsSampleCdk from '../lib/aws-iot-analytics-sample-cdk-stack';
+import * as IotAnalyticsStack from '../lib/iot-analytics-stack';
 
 test('Empty Stack', () => {
   const app = new cdk.App();
@@ -14,7 +14,7 @@ test('Empty Stack', () => {
     pipelineLambdaActivityFunctionName: 'pipelineLambdaActivityFunctionName',
   };
   // WHEN
-  const stack = new AwsIotAnalyticsSampleCdk.AwsIotAnalyticsSampleCdkStack(
+  const stack = new IotAnalyticsStack.IotAnalyticsStack(
     app,
     'MyTestStack',
     props
