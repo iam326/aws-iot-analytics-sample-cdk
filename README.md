@@ -19,6 +19,8 @@ $ cdk --version
 
 ## Usage
 
+### Deploy
+
 ```
 // 環境変数の設定 - AWS IoT Core で作った 1-Click 証明書を使用します
 $ export AWS_IOT_CERTIFICATE_NAME="<証明書の名前>"
@@ -29,3 +31,24 @@ $ yarn build
 $ cdk bootstrap
 $ cdk deploy --context ioTCertificateName=${AWS_IOT_CERTIFICATE_NAME}
 ```
+
+### Publish messages
+
+```
+$ export AWS_IOT_ENDPOINT="<カスタムエンドポイント>"
+$ export AWS_IOT_CLIENT_ID="<モノの名前>"
+
+// メッセージ送信
+$ pip3 install -r requirements.txt
+$ python3 publish_message.py
+
+Connecting to hogehoge.iot.ap-northeast-1.amazonaws.com with client ID aws_iot_analytics_sample_iot_thing...
+Connected!
+Published: {"device": {"id": "device-1", "name": "hoge"}, "datetime": "2020-10-24 01:19:54", "temperature": 21} to the topic: iot/topic
+Published: {"device": {"id": "device-1", "name": "hoge"}, "datetime": "2020-10-24 01:20:04", "temperature": 39} to the topic: iot/topic
+
+...
+
+Disconnected!
+```
+
