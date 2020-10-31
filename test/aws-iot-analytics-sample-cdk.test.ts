@@ -8,15 +8,16 @@ import * as AwsIotAnalyticsSampleCdk from '../lib/aws-iot-analytics-sample-cdk-s
 
 test('Empty Stack', () => {
   const app = new cdk.App();
-  const env = {
+  const props = {
     projectName: 'projectName',
     ioTCertificateName: 'ioTCertificateName',
+    pipelineLambdaActivityFunctionName: 'pipelineLambdaActivityFunctionName',
   };
   // WHEN
   const stack = new AwsIotAnalyticsSampleCdk.AwsIotAnalyticsSampleCdkStack(
     app,
     'MyTestStack',
-    env
+    props
   );
   // THEN
   expectCDK(stack).to(

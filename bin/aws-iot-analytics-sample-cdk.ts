@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 import * as cdk from '@aws-cdk/core';
-import { AwsIotAnalyticsSampleCdkStack } from '../lib/aws-iot-analytics-sample-cdk-stack';
+
+import { LambdaStack } from '../lib/lambda-stack';
+import { IotAnalyticsStack } from '../lib/iot-analytics-sample-stack';
 
 export type Environment = {
   projectName: string;
@@ -16,4 +18,9 @@ const env: Environment = {
   ioTCertificateName,
 };
 
-new AwsIotAnalyticsSampleCdkStack(app, 'AwsIotAnalyticsSampleCdkStack', env);
+const lambda = new LambdaStack(app, 'LambdaStack', env);
+
+new IotAnalyticsStack(app, 'IotAnalyticsStack', {
+  ...env,
+  pipelineLambdaActivityFunctionName: lambda.function.functionName,
+});

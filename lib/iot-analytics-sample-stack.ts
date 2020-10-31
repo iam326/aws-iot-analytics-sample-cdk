@@ -2,21 +2,23 @@ import * as cdk from '@aws-cdk/core';
 import * as iot from '@aws-cdk/aws-iot';
 import * as iotAnalytics from '@aws-cdk/aws-iotanalytics';
 import * as iam from '@aws-cdk/aws-iam';
-import * as lambda from '@aws-cdk/aws-lambda';
 
-import { Environment } from '../bin/aws-iot-analytics-sample-cdk';
+interface IotAnalyticsStackProps extends cdk.StackProps {
+  projectName: string;
+  ioTCertificateName: string;
+  pipelineLambdaActivityFunctionName: string;
+}
 
-export class AwsIotAnalyticsSampleCdkStack extends cdk.Stack {
-  constructor(
-    scope: cdk.Construct,
-    id: string,
-    env: Environment,
-    props?: cdk.StackProps
-  ) {
+export class IotAnalyticsStack extends cdk.Stack {
+  constructor(scope: cdk.Construct, id: string, props: IotAnalyticsStackProps) {
     super(scope, id, props);
 
     const { accountId, region } = new cdk.ScopedAws(this);
-    const { projectName, ioTCertificateName } = env;
+    const {
+      projectName,
+      ioTCertificateName,
+      pipelineLambdaActivityFunctionName,
+    } = props;
     const ioTCertificateArn = `arn:aws:iot:${region}:${accountId}:cert/${ioTCertificateName}`;
 
     /* AWS IoT Core */
@@ -85,36 +87,6 @@ export class AwsIotAnalyticsSampleCdkStack extends cdk.Stack {
       }
     );
 
-    const lambdaExecutionRole = new iam.Role(
-      this,
-      `${projectName}_lambda_execution_role`,
-      {
-        assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
-        path: '/',
-        managedPolicies: [
-          iam.ManagedPolicy.fromAwsManagedPolicyName(
-            'service-role/AWSLambdaBasicExecutionRole'
-          ),
-        ],
-      }
-    );
-
-    const lambdaFunction = new lambda.Function(
-      this,
-      `${projectName}_lambda_function`,
-      {
-        functionName: `${projectName}_pipeline_lambda_function`,
-        handler: 'index.lambda_handler',
-        role: lambdaExecutionRole,
-        runtime: lambda.Runtime.PYTHON_3_7,
-        code: lambda.Code.fromAsset('src'),
-      }
-    );
-    lambdaFunction.addPermission(`${projectName}_lambda_function_permission`, {
-      principal: new iam.ServicePrincipal('iotanalytics.amazonaws.com'),
-      action: 'lambda:InvokeFunction',
-    });
-
     const iotAnalyticsPipeline = new iotAnalytics.CfnPipeline(
       this,
       `${projectName}_iot_analytics_pipeline`,
@@ -154,7 +126,7 @@ export class AwsIotAnalyticsSampleCdkStack extends cdk.Stack {
             lambda: {
               name: 'pipeline_lambda_activity',
               batchSize: 1,
-              lambdaName: lambdaFunction.functionName,
+              lambdaName: pipelineLambdaActivityFunctionName,
               next: 'pipeline_datastore_activity',
             },
             datastore: {
