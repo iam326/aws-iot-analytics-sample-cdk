@@ -3,7 +3,7 @@ import 'source-map-support/register';
 import * as cdk from '@aws-cdk/core';
 
 import { LambdaStack } from '../lib/lambda-stack';
-import { IotAnalyticsStack } from '../lib/iot-analytics-sample-stack';
+import { IotAnalyticsStack } from '../lib/iot-analytics-stack';
 
 export type Environment = {
   projectName: string;
