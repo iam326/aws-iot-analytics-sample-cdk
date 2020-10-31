@@ -27,5 +27,5 @@ $ yarn install
 $ yarn build
 
 $ cdk bootstrap
-$ cdk deploy
+$ cdk deploy --context ioTCertificateName=${AWS_IOT_CERTIFICATE_NAME}
 ```
