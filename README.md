@@ -1,14 +1,31 @@
-# Welcome to your CDK TypeScript project!
+# aws-iot-analytics-sample-cdk
 
-This is a blank project for TypeScript development with CDK.
+AWS IoT Analytics の各リソースを CDK で構築するサンプルです
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+## Environment
 
-## Useful commands
+```
+$ sw_vers
+ProductName:	Mac OS X
+ProductVersion:	10.15.7
+BuildVersion:	19H2
 
- * `npm run build`   compile typescript to js
- * `npm run watch`   watch for changes and compile
- * `npm run test`    perform the jest unit tests
- * `cdk deploy`      deploy this stack to your default AWS account/region
- * `cdk diff`        compare deployed stack with current state
- * `cdk synth`       emits the synthesized CloudFormation template
+$ aws --version
+aws-cli/2.0.28 Python/3.7.4 Darwin/19.6.0 botocore/2.0.0dev32
+
+$ cdk --version
+1.70.0 (build c145314)
+```
+
+## Usage
+
+```
+// 環境変数の設定 - AWS IoT Core で作った 1-Click 証明書を使用します
+$ export AWS_IOT_CERTIFICATE_NAME="<証明書の名前>"
+
+$ yarn install
+$ yarn build
+
+$ cdk bootstrap
+$ cdk deploy
+```
