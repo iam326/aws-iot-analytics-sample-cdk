@@ -18,6 +18,9 @@ $ cdk --version
 
 $ python3 --version
 Python 3.8.5
+
+$ pip3 --version
+pip 20.1.1 from /usr/local/lib/python3.8/site-packages/pip (python 3.8)
 ```
 
 ## Usage
