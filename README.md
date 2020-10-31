@@ -29,7 +29,11 @@ $ yarn install
 $ yarn build
 
 $ cdk bootstrap
-$ cdk deploy --context ioTCertificateName=${AWS_IOT_CERTIFICATE_NAME}
+$ cdk list
+LambdaStack
+IotAnalyticsStack
+IotCoreStack
+$ cdk deploy --context ioTCertificateName=${AWS_IOT_CERTIFICATE_NAME} IotCoreStack
 ```
 
 ### Publish messages
