@@ -15,6 +15,9 @@ aws-cli/2.0.28 Python/3.7.4 Darwin/19.6.0 botocore/2.0.0dev32
 
 $ cdk --version
 1.70.0 (build c145314)
+
+$ python3 --version
+Python 3.8.5
 ```
 
 ## Usage
