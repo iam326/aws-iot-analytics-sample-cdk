@@ -75,6 +75,7 @@ export class IotAnalyticsStack extends cdk.Stack {
         },
       }
     );
+    const iotAnalyticsChannelName = iotAnalyticsChannel.channelName as string;
 
     const iotAnalyticsDatastore = new iotAnalytics.CfnDatastore(
       this,
@@ -86,6 +87,7 @@ export class IotAnalyticsStack extends cdk.Stack {
         },
       }
     );
+    const iotAnalyticsDatastoreName = iotAnalyticsDatastore.datastoreName as string;
 
     const iotAnalyticsPipeline = new iotAnalytics.CfnPipeline(
       this,
@@ -96,7 +98,7 @@ export class IotAnalyticsStack extends cdk.Stack {
           {
             channel: {
               name: 'pipeline_channel_activity',
-              channelName: iotAnalyticsChannel.channelName,
+              channelName: iotAnalyticsChannelName,
               next: 'pipeline_add_attributes_activity',
             },
             addAttributes: {
@@ -131,7 +133,7 @@ export class IotAnalyticsStack extends cdk.Stack {
             },
             datastore: {
               name: 'pipeline_datastore_activity',
-              datastoreName: iotAnalyticsDatastore.datastoreName,
+              datastoreName: iotAnalyticsDatastoreName,
             },
           },
         ],
@@ -147,7 +149,7 @@ export class IotAnalyticsStack extends cdk.Stack {
           {
             actionName: 'SqlAction',
             queryAction: {
-              sqlQuery: `SELECT * FROM ${iotAnalyticsDatastore.datastoreName} WHERE __dt > current_date - interval '1' day`,
+              sqlQuery: `SELECT * FROM ${iotAnalyticsDatastoreName} WHERE __dt > current_date - interval '1' day`,
             },
           },
         ],
@@ -192,7 +194,7 @@ export class IotAnalyticsStack extends cdk.Stack {
           actions: [
             {
               iotAnalytics: {
-                channelName: `${projectName}_iot_analytics_channel`,
+                channelName: iotAnalyticsChannelName,
                 roleArn: iotBatchPutMessageRole.roleArn,
               },
             },
